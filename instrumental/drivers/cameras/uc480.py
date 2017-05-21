@@ -5,7 +5,7 @@ Driver for Thorlabs DCx cameras. May be compatible with iDS cameras that use
 uEye software. Currently Windows-only, but Linux support should be
 possible to implement if desired.
 """
-from past.builtins import basestring, unicode
+from past.builtins import str, str
 
 import struct
 import atexit
@@ -34,7 +34,7 @@ global_weakkeydict = weakref.WeakKeyDictionary()
 def to_bytes(text):
     if isinstance(text, bytes):
         return text
-    elif isinstance(text, unicode):
+    elif isinstance(text, str):
         text.encode('utf-8')
 
 
@@ -55,12 +55,12 @@ def ret_handler(getcmd_names, cmd_pos=1):
     cmd_pos : int
         the position of the command UINT in the function's arglist
     """
-    if isinstance(getcmd_names, basestring):
+    if isinstance(getcmd_names, str):
         getcmd_names = (getcmd_names,)
 
     getcmd_vals = [info._defs[const_name]
                    for pattern in getcmd_names
-                   for const_name in fnmatch.filter(info._defs.keys(), pattern)]
+                   for const_name in fnmatch.filter(list(info._defs.keys()), pattern)]
 
     def wrap(result, funcargs, niceobj):
         # Need to cast in case arg is CData
@@ -409,7 +409,7 @@ def _get_legit_params(params):
         raise InstrumentNotFoundError("No cameras attached")
 
     for cam_params in param_list:
-        if all(cam_params[k] == v for k, v in params.items()):
+        if all(cam_params[k] == v for k, v in list(params.items())):
             return cam_params
 
     raise InstrumentNotFoundError("No camera found matching the given parameters")

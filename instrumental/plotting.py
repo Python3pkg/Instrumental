@@ -231,9 +231,9 @@ def _initialize_params(params):
         p = OrderedDict( ((k, params[k]) for k in params['order']) )
     else:
         # Order alphabetically by key name
-        p = OrderedDict(sorted(params.items(), key=lambda t: t[0]))
+        p = OrderedDict(sorted(list(params.items()), key=lambda t: t[0]))
 
-    for k, pd in p.iteritems():
+    for k, pd in p.items():
 
         # Allow shorhand where only initial value is specified
         if not isinstance(pd, Mapping):
@@ -318,7 +318,7 @@ def param_plot(x, func, params, **kwargs):
     """
 
     params = _initialize_params(params)
-    flat_params = {k: _unitify(v, v['init']) for k, v in params.iteritems()}
+    flat_params = {k: _unitify(v, v['init']) for k, v in params.items()}
 
     # Set up figure and axes that we'll plot on
     fig = plt.figure()
@@ -328,7 +328,7 @@ def param_plot(x, func, params, **kwargs):
 
     # Function for redrawing curve when a parameter value is changed
     def update(val):
-        param_args = {k: _unitify(v, v['slider'].val) for k, v in params.iteritems()}
+        param_args = {k: _unitify(v, v['slider'].val) for k, v in params.items()}
         l.set_ydata(func(x, **param_args))
         fig.canvas.draw_idle()
 
@@ -336,7 +336,7 @@ def param_plot(x, func, params, **kwargs):
         flat_params.update(param_args)
 
     # Create axes and sliders for each parameter
-    for i, (name, vals) in enumerate(params.iteritems()):
+    for i, (name, vals) in enumerate(iter(params.items())):
         ax = plt.axes(_slider_bbox(i).bounds)
         slider = Slider(ax, vals['label'], vals['min'], vals['max'], vals['init'])
         slider.on_changed(update)
@@ -346,7 +346,7 @@ def param_plot(x, func, params, **kwargs):
     # Function for auto-scaling sliders to (ironically) keep them fixed
     def resize_func(event):
         ax0.set_position(_main_ax_bbox(ax0, len(params), fig).bounds)
-        for i, val in enumerate(params.itervalues()):
+        for i, val in enumerate(iter(params.values())):
             box = _slider_bbox(i)
             val['ax'].set_position(box)
 

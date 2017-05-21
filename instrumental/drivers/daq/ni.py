@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Copyright 2016-2017 Nate Bogdanowicz
-from __future__ import division
-from past.builtins import unicode
+
+from past.builtins import str
 
 import time
 from enum import Enum
@@ -23,7 +23,7 @@ def to_bytes(value, codec='utf-8'):
     """Encode a unicode string as bytes or pass through an existing bytes object"""
     if isinstance(value, bytes):
         return value
-    elif isinstance(value, unicode):
+    elif isinstance(value, str):
         value.encode(codec)
     else:
         return bytes(value)
@@ -242,7 +242,7 @@ class Values(object):
     pass
 
 Val = Values()
-for name, attr in NiceNI.__dict__.items():
+for name, attr in list(NiceNI.__dict__.items()):
     if name.startswith('Val_'):
         setattr(Val, name[4:], attr)
 
@@ -430,7 +430,7 @@ class Task(object):
         for ch_type in ['AI', 'AO', 'DI', 'DO']:
             if ch_type in self._mtasks:
                 devname = ''
-                for ch in self.channels.values():
+                for ch in list(self.channels.values()):
                     if ch.type == ch_type:
                         devname = ch.daq.name
                         break
@@ -439,16 +439,16 @@ class Task(object):
                 self.master_type = ch_type
                 break
 
-        for ch_type, mtask in self._mtasks.items():
+        for ch_type, mtask in list(self._mtasks.items()):
             mtask.config_timing(fsamp, n_samples, mode, edge, '')
 
-        for ch_type, mtask in self._mtasks.items():
+        for ch_type, mtask in list(self._mtasks.items()):
             if ch_type != self.master_type:
                 mtask._mx_task.CfgDigEdgeStartTrig(master_trig, edge.value)
 
     def run(self, write_data=None):
         # Need to make sure we get data array for each output channel (AO, DO, CO...)
-        for ch_name, ch in self.channels.items():
+        for ch_name, ch in list(self.channels.items()):
             if ch.type in ('AO', 'DO', 'CO') and ch_name not in write_data:
                 raise Exception('write_data missing an array for output channel {}'
                                 .format(ch_name))
@@ -460,7 +460,7 @@ class Task(object):
 
         # Then manually start. Do we need triggering to launch all tasks at the
         # same time? Do we only start the 'main' one? So many questions...
-        for ch_type, mtask in self._mtasks.items():
+        for ch_type, mtask in list(self._mtasks.items()):
             if ch_type != self.master_type:
                 mtask.start()
         self._mtasks[self.master_type].start()  # Start the master last
@@ -469,7 +469,7 @@ class Task(object):
         read_data = self._read_AI_channels()
 
         self._mtasks[self.master_type].stop()  # Stop the master first
-        for ch_type, mtask in self._mtasks.items():
+        for ch_type, mtask in list(self._mtasks.items()):
             if ch_type != self.master_type:
                 mtask.stop()
 
@@ -491,7 +491,7 @@ class Task(object):
 
     def _write_AO_channels(self, data):
         mx_task = self._mtasks['AO']._mx_task
-        ao_names = [name for (name, ch) in self.channels.items() if ch.type == 'AO']
+        ao_names = [name for (name, ch) in list(self.channels.items()) if ch.type == 'AO']
         arr = np.concatenate([Q_(data[ao]).to('V').magnitude for ao in ao_names])
         arr = arr.astype(np.float64)
         n_samps_per_chan = list(data.values())[0].magnitude.size
@@ -1084,7 +1084,7 @@ class NIDAQ(DAQ):
                 ports[port_name] = []
             ports[port_name].append(line_name)
 
-        for port_name, line_names in ports.items():
+        for port_name, line_names in list(ports.items()):
             line_pairs = [(port_name, l) for l in line_names]
             chan = VirtualDigitalChannel(self, line_pairs)
             setattr(self, port_name, chan)

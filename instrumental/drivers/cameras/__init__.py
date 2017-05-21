@@ -201,7 +201,7 @@ class Camera(Instrument):
         if bad_kwds:
             raise Error("Unknown parameters {}".format(bad_kwds))
 
-        for k, v in self._defaults.items():
+        for k, v in list(self._defaults.items()):
             kwds.setdefault(k, v)
 
         if fill_coords:
@@ -260,7 +260,7 @@ class Camera(Instrument):
             left = cx - width/2
             right = left + width
 
-        kwds.update(zip(names, (width, cx, left, right)))
+        kwds.update(list(zip(names, (width, cx, left, right))))
 
     def find_hot_pixels(self, stddevs=10, **kwds):
         """Generate the list of hot pixels on the camera sensor"""

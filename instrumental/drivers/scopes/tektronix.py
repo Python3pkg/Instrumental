@@ -101,7 +101,7 @@ class TekScope(Scope):
             while len(buf) < num_bytes:
                 raw_bin, _ = inst.visalib.read(inst.session, num_bytes-len(buf))
                 buf += raw_bin
-                print(len(raw_bin))
+                print((len(raw_bin)))
         inst.end_input = visa.constants.SerialTermination.termination_char
         inst.read_termination = '\n'
         inst.read()  # Eat termination

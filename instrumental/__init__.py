@@ -62,7 +62,7 @@ attribute_modules = frozenset(['appdirs', 'conf', 'plotting'])
 
 # Compute the reverse mappings: from objects to their modules
 object_origins = {}
-for module, items in all_by_module.items():
+for module, items in list(all_by_module.items()):
     for item in items:
         object_origins[item] = module
 

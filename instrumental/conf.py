@@ -4,7 +4,7 @@
 try:
     import configparser  # Python 3
 except ImportError:
-    import ConfigParser as configparser  # Python 2
+    import configparser as configparser  # Python 2
 
 import sys
 import os.path
@@ -57,7 +57,7 @@ def load_config_file():
             section[key] = value
 
     # Parse 'instruments' section's values as dicts
-    for key, value in instruments.items():
+    for key, value in list(instruments.items()):
         bad_value = False
         try:
             d = literal_eval(value)

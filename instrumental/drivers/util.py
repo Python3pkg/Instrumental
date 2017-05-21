@@ -8,7 +8,7 @@ import warnings
 from inspect import getargspec, isfunction
 import pint
 
-from past.builtins import basestring
+from past.builtins import str
 
 from . import decorator
 from .. import Q_, u
@@ -148,7 +148,7 @@ def arg_decorator(checker_factory, dec_pos_args, dec_kw_args):
         def wrapper(func, *args, **kwds):
             checked = new_defaults.copy()
             checked.update({name: (checkers[name](arg) if name in checkers else arg) for name, arg
-                            in kwds.items()})
+                            in list(kwds.items())})
             for i, arg in enumerate(args):
                 name = pos_arg_names[i]
                 checked[name] = checkers[name](arg) if name in checkers else arg
@@ -170,7 +170,7 @@ def _unit_decorator(in_map, out_map, pos_args, named_args):
             for arg in ret:
                 if arg is None:
                     unit = None
-                elif isinstance(arg, basestring):
+                elif isinstance(arg, str):
                     optional = arg.startswith('?')
                     if optional:
                         arg = arg[1:]
@@ -189,7 +189,7 @@ def _unit_decorator(in_map, out_map, pos_args, named_args):
         for arg in pos_args:
             if arg is None:
                 unit = None
-            elif isinstance(arg, basestring):
+            elif isinstance(arg, str):
                 optional = arg.startswith('?')
                 if optional:
                     arg = arg[1:]
@@ -199,10 +199,10 @@ def _unit_decorator(in_map, out_map, pos_args, named_args):
             pos_units.append(unit)
 
         named_units = {}
-        for name, arg in named_args.items():
+        for name, arg in list(named_args.items()):
             if arg is None:
                 unit = None
-            elif isinstance(arg, basestring):
+            elif isinstance(arg, str):
                 optional = arg.startswith('?')
                 if optional:
                     arg = arg[1:]
@@ -222,7 +222,7 @@ def _unit_decorator(in_map, out_map, pos_args, named_args):
         pos_units.extend([None] * (len(arg_names) - len(pos_args)))
 
         # Add named units to positional units
-        for name, units in named_units.items():
+        for name, units in list(named_units.items()):
             try:
                 i = arg_names.index(name)
                 pos_units[i] = units
@@ -240,7 +240,7 @@ def _unit_decorator(in_map, out_map, pos_args, named_args):
         def wrapper(func, *args, **kwargs):
             # Convert the input arguments
             new_args = [in_map(a, u, n) for a, u, n in zip(args, pos_units, arg_names)]
-            new_kwargs = {n: in_map(a, named_units.get(n, None), n) for n, a in kwargs.items()}
+            new_kwargs = {n: in_map(a, named_units.get(n, None), n) for n, a in list(kwargs.items())}
 
             # Fill in converted defaults
             for name in arg_names[max(len(args), len(arg_names)-len(defaults)):]:

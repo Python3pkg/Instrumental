@@ -9,7 +9,7 @@ from inspect import isfunction
 from importlib import import_module
 from collections import OrderedDict
 
-from past.builtins import basestring
+from past.builtins import str
 
 from .. import conf
 from ..errors import InstrumentTypeError, InstrumentNotFoundError, ConfigError
@@ -115,7 +115,7 @@ class InstrumentMeta(abc.ABCMeta):
     specifying signatures for methods that are wrapped by a decorator.
     """
     def __new__(metacls, clsname, bases, classdict):
-        for name, value in classdict.items():
+        for name, value in list(classdict.items()):
             if not name.startswith('_') and (isfunction(value) or isinstance(value, property)):
                 cur_doc = value.__doc__
                 if cur_doc is None or (cur_doc.startswith(name) and '\n' not in cur_doc):
@@ -133,11 +133,10 @@ class InstrumentMeta(abc.ABCMeta):
         return super(InstrumentMeta, metacls).__new__(metacls, clsname, bases, classdict)
 
 
-class Instrument(object):
+class Instrument(object, metaclass=InstrumentMeta):
     """
     Base class for all instruments.
     """
-    __metaclass__ = InstrumentMeta
 
     def save_instrument(self, name, force=False):
         """ Save an entry for this instrument in the config file.
@@ -157,7 +156,7 @@ class Instrument(object):
         import os.path
         conf.load_config_file() # Reload latest version
 
-        if name in conf.instruments.keys():
+        if name in list(conf.instruments.keys()):
             if not force:
                 raise Exception("An entry already exists for '{}'!".format(name))
             else:
@@ -230,7 +229,7 @@ class Instrument(object):
 
 
 def _find_visa_inst_type(manufac, model):
-    for mod_name, tup in _visa_models.items():
+    for mod_name, tup in list(_visa_models.items()):
         mod_manufac, mod_models = tup
         if manufac == mod_manufac and model in mod_models:
             return mod_name
@@ -367,7 +366,7 @@ def list_instruments(server=None, module=None):
 
 
 def saved_instruments():
-    return conf.instruments.keys()
+    return list(conf.instruments.keys())
 
 
 def _get_visa_instrument(params):
@@ -381,7 +380,7 @@ def _get_visa_instrument(params):
         raise InstrumentTypeError()
     addr = params['visa_address']
     visa_attrs = ('baud_rate', 'timeout', 'read_termination', 'write_termination', 'parity')
-    kwds = {k: v for k, v in params.items() if k in visa_attrs}
+    kwds = {k: v for k, v in list(params.items()) if k in visa_attrs}
 
     # Check cache to see if we've already found (or not found) the instrument
     if '**visa_instrument' in params:
@@ -432,7 +431,7 @@ def instrument(inst=None, **kwargs):
         return inst
     elif isinstance(inst, dict):
         params = inst
-    elif isinstance(inst, basestring):
+    elif isinstance(inst, str):
         name = inst
         params = conf.instruments.get(name, None)
         if params is None:
@@ -488,7 +487,7 @@ def instrument(inst=None, **kwargs):
         return new_inst
 
     # Find the right type of Instrument to create
-    acceptable_modules = [mod_name for mod_name, acc_params in _acceptable_params.items()
+    acceptable_modules = [mod_name for mod_name, acc_params in list(_acceptable_params.items())
                           if _has_acceptable_params(acc_params, params)]
 
     for mod_name in acceptable_modules:

@@ -18,7 +18,7 @@ Note that ecc.dll must be on the system path, and that this is a windows only
 driver.
 """
 
-from __future__ import print_function
+
 import time
 from enum import Enum
 from ctypes import (c_int32, c_bool, byref, create_string_buffer,

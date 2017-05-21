@@ -22,8 +22,8 @@ ds = DataSession('Session')
 
 for i in range(3):
     meas = {}
-    meas['poling'] = Q_(int(input('Please enter the poling region number: ')))
-    meas['temp'] = Q_(float(input('Please enter the crystal temp in C: ')), 'degC')
+    meas['poling'] = Q_(int(eval(input('Please enter the poling region number: '))))
+    meas['temp'] = Q_(float(eval(input('Please enter the crystal temp in C: '))), 'degC')
 
     stats_ch2 = scope.read_measurement_stats(1)
     stats_ch4 = scope.read_measurement_stats(2)
@@ -40,7 +40,7 @@ for i in range(3):
     meas['transmitted'] = ch3_max['mean'] - ch3_baseline['mean']
     meas['transmitted-error'] = sqrt(ch3_max['stddev']**2 + ch3_baseline['stddev']**2)
 
-    print('-'*79)
+    print(('-'*79))
     ds.add_measurement(meas)
 
 ds.save_summary()

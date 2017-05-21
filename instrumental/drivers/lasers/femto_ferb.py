@@ -70,7 +70,7 @@ class FemtoFiber(Laser):
             correctly.  Otherwise, the error string returned by the laser
             is returned.
         """
-        for key, item in bool_dict.iteritems():
+        for key, item in bool_dict.items():
             if item == control:
                 control = key
         error = self._ask('(param-set! hw-input-dis {})'.format(control),
@@ -101,7 +101,7 @@ class FemtoFiber(Laser):
             correctly.  Otherwise, the error string returned by the laser
             is returned.
         """
-        for key, item in bool_dict.iteritems():
+        for key, item in bool_dict.items():
             if item == control:
                 control = key
         error = self._ask('(param-set! laser:en {})'.format(control),

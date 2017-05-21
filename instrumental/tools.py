@@ -11,6 +11,7 @@ from matplotlib import animation
 from .fitting import guided_trace_fit, guided_ringdown_fit
 from . import u, Q_, conf, instrument
 from .drivers import scopes
+import collections
 
 # Fix for Python 2
 try:
@@ -73,7 +74,7 @@ class DataSession(object):
         with open(filename, 'w') as f:
             # TODO: Warn if overwriting file
             f.write('# Data saved {}\n\n'.format(datetime.now().isoformat(' ')))
-            for name, value in meas_dict.items():
+            for name, value in list(meas_dict.items()):
                 fmt = self._default_format(value.magnitude)
                 f.write('{} = {}\n'.format(name, fmt) % value.magnitude)
 
@@ -96,7 +97,7 @@ class DataSession(object):
         arrays, labels, fmt = [], [], []
 
         # Extract names and units to make the labels
-        for name, qarr in self.meas_dict.items():
+        for name, qarr in list(self.meas_dict.items()):
             unit = qarr.units
             labels.append('{} ({})'.format(name, unit))
             arrays.append(qarr.magnitude)
@@ -164,7 +165,7 @@ class DataSession(object):
         def makefun(key):
             return lambda **kwargs: kwargs[key]
 
-        if isinstance(vars[0], basestring):
+        if isinstance(vars[0], str):
             # Vars wasn't nested; nest it and retry
             return self._parse_plotvars([vars])
 
@@ -172,12 +173,12 @@ class DataSession(object):
             plotvar_triple = []
             plotvars.append(plotvar_triple)
             for var in var_tuple[:2]:
-                if isinstance(var, basestring):
+                if isinstance(var, str):
                     # Convert var string to a function
                     var_func = makefun(var)
                     var_func.name = var
                     plotvar_triple.append(var_func)
-                elif callable(var):
+                elif isinstance(var, collections.Callable):
                     plotvar_triple.append(var)
                 else:
                     raise Exception("`vars` must contain strings or functions")
@@ -243,7 +244,7 @@ class DataSession(object):
         is_conflict = os.path.exists(full_fname)
         if is_conflict:
             if overwrite:
-                print("Warning: Overwriting file {}".format(fname))
+                print(("Warning: Overwriting file {}".format(fname)))
             else:
                 i = 1
                 new_full_fname = full_fname
@@ -251,8 +252,8 @@ class DataSession(object):
                     new_fname = '({}) {}'.format(i, fname)
                     new_full_fname = os.path.join(self.data_dir, new_fname)
                     i += 1
-                print('Filename "{}" used already. Using "{}" instead.'.format(
-                    fname, new_fname))
+                print(('Filename "{}" used already. Using "{}" instead.'.format(
+                    fname, new_fname)))
                 full_fname = new_full_fname
         return full_fname
 
@@ -276,8 +277,8 @@ class DataSession(object):
                 i += 1
 
         if i > 1:
-            print('Session name "{}" used already. Using "{}" instead.'.format(
-                session_subdir, alt_session_subdir))
+            print(('Session name "{}" used already. Using "{}" instead.'.format(
+                session_subdir, alt_session_subdir)))
         if not os.path.exists(data_dir):
             os.makedirs(data_dir)
         return data_dir
@@ -396,17 +397,17 @@ def fit_ringdown_save(subdir='', trace_num=0, base_dir=None):
 
     FWHM = guided_ringdown_fit(x, y)
     _save_summary(full_filename, FWHM)
-    print("FWHM = {}".format(FWHM))
+    print(("FWHM = {}".format(FWHM)))
 
 
 def fit_ringdown(scope, channel=1, FSR=None):
     scope = instrument(scope)
     x, y = scope.get_data(channel)
     FWHM = guided_ringdown_fit(x, y)
-    print("FWHM = {}".format(FWHM))
+    print(("FWHM = {}".format(FWHM)))
     if FSR:
         FSR = u.Quantity(FSR)
-        print("Finesse = {:,.0F}".format(float(FSR/FWHM)))
+        print(("Finesse = {:,.0F}".format(float(FSR/FWHM))))
 
 
 def fit_scan_save(EOM_freq, subdir='', trace_num=0, base_dir=None):
@@ -426,7 +427,7 @@ def fit_scan_save(EOM_freq, subdir='', trace_num=0, base_dir=None):
     params = guided_trace_fit(x, y, EOM_freq)
     _save_summary(full_filename, params['FWHM'])
     _ensure_photo_copied(os.path.join(full_data_dir, 'folder.jpg'))
-    print("FWHM = {}".format(params['FWHM']))
+    print(("FWHM = {}".format(params['FWHM'])))
 
 
 def fit_scan(EOM_freq, scope, channel=1):
@@ -434,7 +435,7 @@ def fit_scan(EOM_freq, scope, channel=1):
     EOM_freq = u.Quantity(EOM_freq)
     x, y = scope.get_data(channel)
     params = guided_trace_fit(x, y, EOM_freq)
-    print("FWHM = {}".format(params['FWHM']))
+    print(("FWHM = {}".format(params['FWHM'])))
 
 
 def diff(unitful_array):
@@ -448,14 +449,14 @@ def FSRs_from_mode_wavelengths(wavelengths):
 def find_FSR():
     wavelengths = []
     while True:
-        raw = raw_input('Input wavelength (nm): ')
+        raw = input('Input wavelength (nm): ')
         if not raw:
             break
         wavelengths.append(float(raw))
     wavelengths = wavelengths * u.nm
     FSRs = FSRs_from_mode_wavelengths(wavelengths)
     print(FSRs)
-    print('Mean: {}'.format(np.mean(FSRs)))
+    print(('Mean: {}'.format(np.mean(FSRs))))
 
 TOP_CAM_SERIAL = '4002856484'
 SIDE_CAM_SERIAL = '4002862589'
@@ -469,7 +470,7 @@ def do_ringdown_set(set_name, base_dir=None):
         os.makedirs(set_dir)
 
     # Block until light is turned on
-    raw_input('Please turn on light then press [ENTER]: ')
+    input('Please turn on light then press [ENTER]: ')
 
     from .drivers.cameras.uc480 import get_camera
     top_cam = get_camera(serial=TOP_CAM_SERIAL)
@@ -490,7 +491,7 @@ def do_ringdown_set(set_name, base_dir=None):
     cum_FWHM = 0 * u.MHz
     print("-------------Enter d[one] to stop taking data-------------")
     while True:
-        s = raw_input('Press [ENTER] to process ringdown {}: '.format(trace_num))
+        s = input('Press [ENTER] to process ringdown {}: '.format(trace_num))
         if s and s[0].lower() == 'd':
             break
         x, y = scope.get_data(channel=1)
@@ -499,21 +500,21 @@ def do_ringdown_set(set_name, base_dir=None):
 
         FWHM = guided_ringdown_fit(x, y)
         _save_summary(full_filename, FWHM)
-        print("-------------------------------------- FWHM = {}".format(FWHM))
+        print(("-------------------------------------- FWHM = {}".format(FWHM)))
         cum_FWHM += FWHM
         trace_num += 1
-    print('Mean FWHM: {}'.format(cum_FWHM/trace_num))
+    print(('Mean FWHM: {}'.format(cum_FWHM/trace_num)))
 
 
 def get_photo_fnames():
     basedir = conf.prefs['data_directory']
     fnames = []
     w = os.walk(basedir)
-    w.next()
+    next(w)
     for root, dirs, files in w:
         num_subdirs = len(dirs)
         for i in range(num_subdirs):
-            root, dirs, files = w.next()
+            root, dirs, files = next(w)
             files = [os.path.join(root, f) for f in files
                      if (f.lower() in ['top.jpg', 'folder.jpg'])]
             fnames.extend(files)

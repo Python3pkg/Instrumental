@@ -14,7 +14,7 @@ def _instrument(params):
     """ Possible params include 'visa_address', or 'module'"""
     params['read_termination']='\r'
     params['write_termination']='\r'
-    if params.has_key('rs232_interface'):
+    if 'rs232_interface' in params:
         rs232_interface = params['rs232_interface']
     else:
         rs232_interface = True
